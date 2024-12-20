@@ -54,9 +54,14 @@ runs:
 
     - shell: bash
       run: |
-        TagMutability=${{ inputs.ImageTagMutability }}
-        if [[ "$TagMutability" != "MUTABLE" && "$TagMutability" != "IMMUTABLE" ]]; then
+        TagMutability="${{ inputs.ImageTagMutability }}"
+        if [[ -z "$TagMutability" ]]; then
           exit 0
+        fi
+
+        if [[ "$TagMutability" != "MUTABLE" && "$TagMutability" != "IMMUTABLE" ]]; then
+          echo "ImageTagMutability Input must be either MUTABLE or IMMUTABLE."
+          exit 1
         fi
 
         CURRENT_SETTING=$(aws ecr describe-repositories --repository-names ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }} --query 'repositories[0].imageTagMutability' --output text)
@@ -65,4 +70,4 @@ runs:
           exit 0
         fi
 
-        aws ecr put-image-tag-mutability --repository-name ${{ inputs.RepositoryName }} --image-tag-mutability ${{ inputs.TagMutability }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }}
+        aws ecr put-image-tag-mutability --repository-name ${{ inputs.RepositoryName }} --image-tag-mutability $TagMutability --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }}
