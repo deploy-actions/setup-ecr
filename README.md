@@ -37,6 +37,6 @@ This action logs into the amazon ecr service and creates a repository with the `
 | Name               | Description                                                                                                          | Mandatory | Default                  |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------- | --------- | ------------------------ |
 | RepositoryName     | ECR Repository Name                                                                                                  | ✅        |                          |
-| AwsRegion          | AWS Region, e.g. us-east-2                                                                                           |           | aws configure region     |
+| AwsRegion          | AWS Region, e.g. us-east-2                                                                                           |           | env AWS_REGION           |
 | RegistryId         | Repository's Registry ID (AWS Account ID)                                                                            |           | aws configure account id |
 | ImageTagMutability | The tag mutability setting for the repository. This input is always applied. Only `MUTABLE` or `IMMUTABLE` is valid. |           |                          |
