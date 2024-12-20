@@ -49,7 +49,7 @@ runs:
           exit 0
         fi
 
-        aws ecr create-repository --repository-name ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }}
+        aws ecr create-repository --repository-name ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }} >/dev/null
 
     - shell: bash
       run: |
