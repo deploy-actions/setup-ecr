@@ -1,0 +1,68 @@
+name: Login Amazon ECR and Setup ECR Private Repository
+description: Logs into Amazon ECR and create a repository if it doesn't exist.
+branding:
+  icon: cloud
+  color: orange
+
+inputs:
+  RepositoryName:
+    description: The name to use for the private repository.
+    required: true
+  ImageTagMutability:
+    description: The tag mutability setting for the repository. This input is always applied.
+    required: false
+  AwsRegion:
+    description: AWS Region, e.g. us-east-2
+    required: false
+  RegistryId:
+    description: Repository's Registry ID (AWS Account ID)
+    required: false
+
+runs:
+  using: composite
+
+  steps:
+    - shell: bash
+      run: aws sts get-caller-identity >/dev/null
+
+    - shell: bash
+      id: aws
+      run: |
+        if [ -z "${{ inputs.AwsRegion }}" ]; then
+          REGION=$(aws configure get region)
+        else
+          REGION=${{ inputs.AwsRegion }}
+        fi
+        echo "region=$REGION" >> "$GITHUB_OUTPUT"
+
+
+        if [ -z "${{ inputs.RegistryId }}" ]; then
+          REGISTRY_ID=$(aws sts get-caller-identity --query Account --output text)
+        else
+          REGISTRY_ID=${{ inputs.RegistryId }}
+        fi
+        echo "registry_id=$REGISTRY_ID" >> "$GITHUB_OUTPUT"
+
+    - shell: bash
+      id: repository
+      run: |
+        if aws ecr describe-repositories --repository-name ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }} >/dev/null 2>&1; then
+          exit 0
+        fi
+
+        aws ecr create-repository --repository-name ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }}
+
+    - shell: bash
+      run: |
+        TagMutability=${{ inputs.ImageTagMutability }}
+        if [[ "$TagMutability" != "MUTABLE" && "$TagMutability" != "IMMUTABLE" ]]; then
+          exit 0
+        fi
+
+        CURRENT_SETTING=$(aws ecr describe-repositories --repository-names ${{ inputs.RepositoryName }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }} --query 'repositories[0].imageTagMutability' --output text)
+
+        if [ "$CURRENT_SETTING" == "$TagMutability" ]; then
+          exit 0
+        fi
+
+        aws ecr put-image-tag-mutability --repository-name ${{ inputs.RepositoryName }} --image-tag-mutability ${{ inputs.TagMutability }} --region ${{ steps.aws.outputs.region }} --registry-id ${{ steps.aws.outputs.registry_id }}
