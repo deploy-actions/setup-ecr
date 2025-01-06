@@ -18,7 +18,7 @@ This action logs into the amazon ecr service and creates a repository with the `
   uses: aws-actions/amazon-ecr-login@v2
 
 - name: Setup ECR Repository
-  uses: deploy-actions/setup-ecr@main
+  uses: deploy-actions/setup-ecr@v1
   with:
     RepositoryName: simple-api
 
